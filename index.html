@@ -1034,5 +1034,371 @@ const templates = {
             });
         });
     </script>
+    <!-- ========== 留言板 CSS ========== -->
+<style>
+    .message-board * { margin: 0; padding: 0; box-sizing: border-box; }
+    .message-board {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255,255,255,0.95);
+        border-radius: 24px;
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    .board-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    .board-header h3 {
+        font-size: 1.3rem;
+        color: #0a2540;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .sync-badge {
+        background: #10b981;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    .input-area {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    .input-row {
+        display: flex;
+        gap: 10px;
+    }
+    .input-row input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1.5px solid #e0e8f0;
+        border-radius: 16px;
+        font-size: 0.95rem;
+        background: white;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .input-row input:focus {
+        border-color: #3b82f6;
+    }
+    .input-row .name-input {
+        flex: 1;
+    }
+    .input-row .content-input {
+        flex: 3;
+    }
+    .post-btn {
+        background: #0a2540;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .post-btn:hover {
+        background: #1e3a5f;
+        transform: scale(1.02);
+    }
+    .messages-container {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+    .message-item {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid #edf2f7;
+        transition: all 0.15s;
+    }
+    .message-item:hover {
+        background: #f1f5f9;
+    }
+    .message-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    .message-name {
+        font-weight: 650;
+        color: #075985;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .message-time {
+        font-size: 0.7rem;
+        color: #7c96b0;
+    }
+    .message-content {
+        color: #1e293b;
+        line-height: 1.5;
+        word-break: break-word;
+        padding-right: 30px;
+    }
+    .delete-msg-btn {
+        background: none;
+        border: none;
+        color: #cbd5e1;
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 20px;
+        transition: all 0.15s;
+        opacity: 0.6;
+    }
+    .delete-msg-btn:hover {
+        background: #fee2e2;
+        color: #dc2626;
+        opacity: 1;
+    }
+    .empty-message {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94a3b8;
+    }
+    .footer-tip {
+        margin-top: 15px;
+        text-align: right;
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    .refresh-btn {
+        background: none;
+        border: 1px solid #e2e8f0;
+        padding: 6px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: #64748b;
+        transition: all 0.15s;
+    }
+    .refresh-btn:hover {
+        background: #f1f5f9;
+    }
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999; visibility: hidden; opacity: 0; transition: 0.2s;
+    }
+    .modal-overlay.show { visibility: visible; opacity: 1; }
+    .modal-box {
+        background: white; border-radius: 28px; padding: 28px;
+        max-width: 350px; width: 90%; box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+    }
+    .modal-box h4 { margin-bottom: 16px; color: #0a2540; }
+    .modal-box input {
+        width: 100%; padding: 14px; font-size: 1.1rem; text-align: center;
+        border: 2px solid #e2e8f0; border-radius: 20px; margin-bottom: 20px;
+    }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-actions button { flex: 1; padding: 12px; border-radius: 40px; font-weight: 600; cursor: pointer; }
+    .btn-confirm { background: #0a2540; color: white; border: none; }
+    .btn-cancel { background: #f1f5f9; border: none; color: #1e293b; }
+</style>
+
+<!-- ========== 留言板 HTML ========== -->
+<div class="message-board">
+    <div class="board-header">
+        <h3>
+            <span>💬 留言板</span>
+            <span class="sync-badge" id="syncStatus">☁️ 实时</span>
+        </h3>
+        <button class="refresh-btn" id="refreshBoardBtn">🔄 刷新</button>
+    </div>
+
+    <div class="input-area">
+        <div class="input-row">
+            <input type="text" id="messageName" placeholder="昵称" maxlength="20" class="name-input" autocomplete="off">
+            <input type="text" id="messageContent" placeholder="说点什么..." maxlength="200" class="content-input" autocomplete="off">
+            <button class="post-btn" id="postMessageBtn">发送</button>
+        </div>
+    </div>
+
+    <div class="messages-container" id="messagesContainer">
+        <div class="empty-message">✨ 加载中...</div>
+    </div>
+    <div class="footer-tip" id="lastUpdate">—</div>
+</div>
+
+<!-- 密码弹窗 -->
+<div class="modal-overlay" id="passwordModal">
+    <div class="modal-box">
+        <h4>🔐 输入删除密码</h4>
+        <input type="password" id="passwordInput" placeholder="密码" maxlength="10">
+        <div class="modal-actions">
+            <button class="btn-confirm" id="confirmPasswordBtn">确认</button>
+            <button class="btn-cancel" id="cancelPasswordBtn">取消</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== 留言板 JavaScript ========== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+    (function() {
+        // ========== Supabase 配置 ==========
+        const SUPABASE_URL = 'https://sqhcbwqrpyzglbcclzzj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxaGNid3FycHl6Z2xiY2NsenpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODIwMDUsImV4cCI6MjA5MTc1ODAwNX0.1-MdHopPxwfzU9Zu78Ae4FiyMazAPswrA4HwcHJKeP0';
+        const DELETE_PASSWORD = atob('MTIzNDU='); // 12345
+        // ===================================
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const messageName = document.getElementById('messageName');
+        const messageContent = document.getElementById('messageContent');
+        const postBtn = document.getElementById('postMessageBtn');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const syncStatus = document.getElementById('syncStatus');
+        const lastUpdate = document.getElementById('lastUpdate');
+        const refreshBtn = document.getElementById('refreshBoardBtn');
+
+        const passwordModal = document.getElementById('passwordModal');
+        const passwordInput = document.getElementById('passwordInput');
+        const confirmPasswordBtn = document.getElementById('confirmPasswordBtn');
+        const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
+
+        let messages = [];
+        let pendingDeleteId = null;
+
+        function formatTime(ts) {
+            if (!ts) return '';
+            const d = new Date(ts);
+            return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+        }
+
+        async function loadMessages() {
+            const { data, error } = await supabase
+                .from('messages')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(100);
+            
+            if (error) {
+                console.error('加载失败:', error);
+                syncStatus.textContent = '⚠️ 离线';
+                syncStatus.style.background = '#ef4444';
+                return;
+            }
+            messages = data || [];
+            syncStatus.textContent = '☁️ 实时';
+            syncStatus.style.background = '#10b981';
+            renderMessages();
+            lastUpdate.textContent = `📌 ${new Date().toLocaleTimeString()}`;
+        }
+
+        function renderMessages() {
+            if (messages.length === 0) {
+                messagesContainer.innerHTML = '<div class="empty-message">✨ 还没有留言，说点什么吧</div>';
+                return;
+            }
+            messagesContainer.innerHTML = messages.map(m => `
+                <div class="message-item">
+                    <div class="message-header">
+                        <span class="message-name">
+                            ${escapeHtml(m.name || '匿名')}
+                            <span class="message-time">${formatTime(m.created_at)}</span>
+                        </span>
+                        <button class="delete-msg-btn" data-id="${m.id}">🗑️</button>
+                    </div>
+                    <div class="message-content">${escapeHtml(m.content)}</div>
+                </div>
+            `).join('');
+        }
+
+        async function addMessage() {
+            const name = messageName.value.trim();
+            const content = messageContent.value.trim();
+            if (!content) { alert('请输入留言内容'); return; }
+            
+            const { error } = await supabase
+                .from('messages')
+                .insert([{ name: name || '匿名', content }]);
+            
+            if (error) { alert('发送失败'); return; }
+            messageContent.value = '';
+            messageContent.focus();
+            loadMessages();
+        }
+
+        async function deleteMessage(id) {
+            const { error } = await supabase.from('messages').delete().eq('id', id);
+            if (error) { alert('删除失败'); return; }
+            loadMessages();
+        }
+
+        function showPasswordModal(id) {
+            pendingDeleteId = id;
+            passwordInput.value = '';
+            passwordModal.classList.add('show');
+            passwordInput.focus();
+        }
+
+        function hidePasswordModal() {
+            passwordModal.classList.remove('show');
+            pendingDeleteId = null;
+        }
+
+        async function verifyAndDelete() {
+            if (passwordInput.value.trim() !== DELETE_PASSWORD) {
+                alert('密码错误');
+                passwordInput.value = '';
+                passwordInput.focus();
+                return;
+            }
+            const id = pendingDeleteId;
+            hidePasswordModal();
+            if (id) await deleteMessage(id);
+        }
+
+        // 实时订阅
+        supabase.channel('messages_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, loadMessages)
+            .subscribe();
+
+        // 事件绑定
+        postBtn.addEventListener('click', addMessage);
+        messageContent.addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addMessage(); } });
+        refreshBtn.addEventListener('click', () => window.location.reload());
+        
+        messagesContainer.addEventListener('click', e => {
+            const btn = e.target.closest('.delete-msg-btn');
+            if (btn) showPasswordModal(btn.dataset.id);
+        });
+
+        confirmPasswordBtn.addEventListener('click', verifyAndDelete);
+        cancelPasswordBtn.addEventListener('click', hidePasswordModal);
+        passwordInput.addEventListener('keypress', e => { if (e.key === 'Enter') verifyAndDelete(); });
+        passwordModal.addEventListener('click', e => { if (e.target === passwordModal) hidePasswordModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && passwordModal.classList.contains('show')) hidePasswordModal(); });
+
+        // 初始化
+        loadMessages();
+    })();
+</script>
 </body>
 </html>
